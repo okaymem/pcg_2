@@ -1,0 +1,138 @@
+
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Image Metadata Lab</title>
+    <link rel="stylesheet" href="./style.css">
+    <script type="module" src="./app.js"></script>
+</head>
+<body>
+    <main class="app">
+        <header class="header">
+            <div>
+                <h1>Image Metadata Lab</h1>
+                <p class="subtitle">Анализ метаданных изображений</p>
+            </div>
+            <span class="version">Lab #2</span>
+        </header>
+
+        <section class="panel">
+            <h2>Выбор файлов</h2>
+            <p class="muted">
+                Выберите папку с изображениями или отдельные файлы.
+            </p>
+
+            <div class="actions">
+                <label class="button primary" for="folderInput">
+                    Выбрать папку
+                </label>
+                <input
+                    id="folderInput"
+                    type="file"
+                    webkitdirectory
+                    directory
+                    multiple
+                    hidden
+                >
+
+                <label class="button secondary" for="fileInput">
+                    Выбрать файлы
+                </label>
+                <input
+                    id="fileInput"
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.gif,.bmp,.tif,.tiff,.pcx"
+                    hidden
+                >
+
+                <button id="startButton" class="button primary" disabled>
+                    Начать анализ
+                </button>
+
+                <button id="cancelButton" class="button danger" disabled>
+                    Отменить
+                </button>
+            </div>
+
+            <p id="selectionInfo" class="muted" aria-live="polite">
+                Файлы не выбраны.
+            </p>
+        </section>
+
+        <section class="panel">
+            <div class="progress-heading">
+                <h2>Прогресс</h2>
+                <span id="progressText">0%</span>
+            </div>
+
+            <progress id="progressBar" value="0" max="100"></progress>
+
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-label">Обработано</span>
+                    <strong id="completedCount">0</strong>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Успешно</span>
+                    <strong id="successCount">0</strong>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Ошибки</span>
+                    <strong id="errorCount">0</strong>
+                </div>
+            </div>
+
+            <p id="statusText" class="status" aria-live="polite">
+                Ожидание файлов
+            </p>
+        </section>
+
+        <section class="panel results-panel">
+            <div class="results-heading">
+                <div>
+                    <h2>Результаты</h2>
+                    <p id="resultsInfo" class="muted">Записей: 0</p>
+                </div>
+               
+            </div>
+
+            <div class="table-container" id="tableContainer">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Имя файла</th>
+                            <th>Формат</th>
+                            <th>Ширина</th>
+                            <th>Высота</th>
+                            <th>DPI X</th>
+                            <th>DPI Y</th>
+                            <th>Глубина цвета</th>
+                            <th>Сжатие</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <tr>
+                            <td colspan="9" class="empty">
+                                Результатов пока нет
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="table-hint">
+                DPI отображается, только если его удалось определить
+                из метаданных файла.
+            </p>
+        </section>
+
+        <footer>
+            Image Metadata Lab · Локальная обработка в браузере
+        </footer>
+    </main>
+</body>
+</html>
