@@ -22,7 +22,7 @@ let selectedFiles = [];
 let results = [];
 let running = false;
 
-const ROW_HEIGHT = 39;
+const ROW_HEIGHT = 68;
 const EXTRA_ROWS = 10;
 
 function formatNumber(value) {
@@ -37,6 +37,14 @@ function formatNumber(value) {
     }
 
     return String(value);
+}
+
+function hasDpi(value) {
+    return value !== null &&
+        value !== undefined &&
+        value !== "" &&
+        Number.isFinite(Number(value)) &&
+        Number(value) > 0;
 }
 
 function updateSelection(files) {
@@ -97,6 +105,97 @@ function createSpacerRow(height) {
     return row;
 }
 
+// Создание ячейки DPI.
+// Если DPI отсутствует, пользователь может ввести
+// физический размер соответствующей стороны в дюймах.
+function createDpiCell(result, axis) {
+    const cell = document.createElement("td");
+
+    const dpiKey = axis === "x" ? "dpiX" : "dpiY";
+    const sizeKey = axis === "x"
+        ? "physicalWidthInches"
+        : "physicalHeightInches";
+
+    // Существующее значение DPI из метаданных.
+    if (hasDpi(result[dpiKey])) {
+        cell.textContent = formatNumber(Number(result[dpiKey]));
+        return cell;
+    }
+
+    // Для повреждённых файлов или файлов без размеров
+    // расчёт выполнить невозможно.
+    if (
+        result.error ||
+        !Number.isFinite(Number(result.width)) ||
+        !Number.isFinite(Number(result.height)) ||
+        Number(result.width) <= 0 ||
+        Number(result.height) <= 0
+    ) {
+        cell.textContent = "—";
+        return cell;
+    }
+
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "0.0001";
+    input.step = "any";
+    input.placeholder = axis === "x"
+        ? "Ширина, дюймы"
+        : "Высота, дюймы";
+    input.setAttribute(
+        "aria-label",
+        axis === "x"
+            ? `Физическая ширина файла ${result.fileName} в дюймах`
+            : `Физическая высота файла ${result.fileName} в дюймах`
+    );
+
+    input.title = axis === "x"
+        ? "Введите физическую ширину изображения в дюймах"
+        : "Введите физическую высоту изображения в дюймах";
+
+    input.value = result[sizeKey] ?? "";
+    input.style.width = "100px";
+    input.style.maxWidth = "100%";
+    input.style.boxSizing = "border-box";
+    input.style.fontSize = "12px";
+
+    const output = document.createElement("span");
+    output.style.display = "block";
+    output.style.fontSize = "11px";
+    output.style.marginTop = "3px";
+
+    function updateOutput() {
+        const inches = Number(result[sizeKey]);
+        const pixels = Number(
+            axis === "x" ? result.width : result.height
+        );
+
+        if (
+            result[sizeKey] === undefined ||
+            result[sizeKey] === "" ||
+            !Number.isFinite(inches) ||
+            inches <= 0
+        ) {
+            output.textContent = "";
+            return;
+        }
+
+        const calculatedDpi = pixels / inches;
+        output.textContent =
+            `Расчёт: ${formatNumber(calculatedDpi)} DPI`;
+    }
+
+    input.addEventListener("input", () => {
+        result[sizeKey] = input.value;
+        updateOutput();
+    });
+
+    updateOutput();
+
+    cell.append(input, output);
+    return cell;
+}
+
 function renderTable() {
     const total = results.length;
     const viewportHeight = tableContainer.clientHeight || 520;
@@ -136,16 +235,13 @@ function renderTable() {
         const result = results[i];
         const row = document.createElement("tr");
 
+        row.style.height = `${ROW_HEIGHT}px`;
+
         const values = [
             result.fileName,
             result.format?.toUpperCase() ?? "—",
             formatNumber(result.width),
-            formatNumber(result.height),
-            formatNumber(result.dpiX),
-            formatNumber(result.dpiY),
-            formatNumber(result.colorDepth),
-            formatNumber(result.compression),
-            result.error || "OK"
+            formatNumber(result.height)
         ];
 
         values.forEach((value, index) => {
@@ -157,14 +253,30 @@ function renderTable() {
                 cell.title = result.fileName ?? "";
             }
 
-            if (index === 8 && result.error) {
-                cell.className = "error";
-                cell.title = result.error;
-            }
-
             row.append(cell);
         });
 
+        // DPI X и DPI Y: метаданные либо расчёт по введённому размеру.
+        row.append(createDpiCell(result, "x"));
+        row.append(createDpiCell(result, "y"));
+
+        const colorCell = document.createElement("td");
+        colorCell.textContent = formatNumber(result.colorDepth);
+        row.append(colorCell);
+
+        const compressionCell = document.createElement("td");
+        compressionCell.textContent = formatNumber(result.compression);
+        row.append(compressionCell);
+
+        const statusCell = document.createElement("td");
+        statusCell.textContent = result.error || "OK";
+
+        if (result.error) {
+            statusCell.className = "error";
+            statusCell.title = result.error;
+        }
+
+        row.append(statusCell);
         fragment.append(row);
     }
 

@@ -1,1 +1,1 @@
-ссылка на деплой https://magnificent-lokum-5f4ccc.netlify.app
+ссылка на деплой https://mellifluous-croissant-08d183.netlify.app
